@@ -33,7 +33,7 @@ resource "aws_subnet" "public-subnet-2" {
   }
 }
 
-# Create Application Public Subnets
+# Create Application Subnets
 resource "aws_subnet" "app-subnet-1" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = var.app_subnet1
@@ -109,30 +109,6 @@ resource "aws_route_table_association" "pub2" {
   route_table_id = aws_route_table.route_table.id
 }
 
-#Create EC2 Instances
-resource "aws_instance" "web1" {
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  availability_zone      = var.az_a
-  vpc_security_group_ids = [aws_security_group.ec2-sg.id]
-  subnet_id              = aws_subnet.public-subnet-1.id
-  tags = {
-    Name = "We server-1"
-  }
-
-}
-
-resource "aws_instance" "web2" {
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  availability_zone      = var.az_b
-  vpc_security_group_ids = [aws_security_group.ec2-sg.id]
-  subnet_id              = aws_subnet.public-subnet-2.id
-  tags = {
-    Name = "Web Server-2"
-  }
-
-}
 
 # Create LB Security Group
 resource "aws_security_group" "lb-sg" {
@@ -159,7 +135,7 @@ resource "aws_security_group" "lb-sg" {
   }
 }
 
-# Create Security Group
+# Create ec2 Security Group
 resource "aws_security_group" "ec2-sg" {
   name        = "Webserver-SG"
   description = "Allow traffics from ALB to instance"
@@ -209,6 +185,32 @@ resource "aws_security_group" "db-sg" {
   }
 }
 
+# Create EC2 Instances
+resource "aws_instance" "web1" {
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  availability_zone      = var.az_a
+  vpc_security_group_ids = [aws_security_group.ec2-sg.id]
+  subnet_id              = aws_subnet.public-subnet-1.id
+  tags = {
+    Name = "We server-1"
+  }
+
+}
+
+resource "aws_instance" "web2" {
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  availability_zone      = var.az_b
+  vpc_security_group_ids = [aws_security_group.ec2-sg.id]
+  subnet_id              = aws_subnet.public-subnet-2.id
+  tags = {
+    Name = "Web Server-2"
+  }
+
+}
+
+# Create Load Balancer
 resource "aws_lb" "alb" {
   name               = "ALB"
   internal           = false
@@ -249,6 +251,7 @@ resource "aws_lb_listener" "alb" {
   }
 }
 
+# Create database
 resource "aws_db_instance" "database" {
   allocated_storage      = 10
   db_subnet_group_name   = aws_db_subnet_group.default.id
